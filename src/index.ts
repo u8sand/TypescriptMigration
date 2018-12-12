@@ -124,7 +124,7 @@ function LabelReducer<
  * Note that label mappings are bi-directional,
  *  so one need not specify the other side.
  */
-export function CompileMigration<Left extends Object, Right extends Object>(
+export default function CompileMigration<Left extends Object, Right extends Object>(
   Left: Left,
   Right: Right,
   m_func: (_: {

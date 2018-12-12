@@ -1,5 +1,5 @@
 import {strict as assert} from 'assert'
-import { CompileMigration } from '.'
+import CompileMigration from './index'
 
 describe('test migration', () => {
   describe('case 1', () => {

@@ -1,7 +1,17 @@
 # TypescriptMigration
-A typesafe bidirectional migration facilitator
+
+A typesafe bidirectional migration facilitator.
+
+## Installation
+```bash
+npm i ts-migration
+```
+
+## Usage
 
 ```ts
+import CompileMigration from 'ts-migration'
+
 // Consider the following object structure we desire
 type MyObjectType = {
   MyNiceString: string

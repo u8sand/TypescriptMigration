@@ -9,13 +9,9 @@
     "target": "es5",
     "lib": [
       "es2015"
-    ],
-    "plugins": [
-      { "transform": "ts-transformer-keys/transformer" }
     ]
   },
   "include": [
     "./src/**/*"
-  ],
-  "compiler": "ttsc"
+  ]
 }

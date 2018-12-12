@@ -1,13 +1,27 @@
 {
-  "name": "json-migration",
+  "name": "ts-migration",
   "version": "1.0.0",
-  "description": "A library for bi-directional JSON data migrations",
-  "main": "index.js",
+  "description": "A typesafe bidirectional migration facilitator",
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dcic/signature-commons-schema.git"
+  },
+  "bugs": {
+    "url": "https://github.com/dcic/signature-commons-schema/issues"
+  },
+  "homepage": "https://github.com/dcic/signature-commons-schema#readme",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "scripts": {
-    "test": "mocha -r ts-node/register src/**/*.test.ts"
+    "build": "tsc",
+    "test": "mocha -r ts-node/register src/**/*.test.ts",
+    "prepublish": "npm run test && npm run build"
   },
   "author": "Daniel J. B. Clarke <u8sand@gmail.com>",
-  "license": "MIT",
+  "license": "Apache-2.0",
   "devDependencies": {
     "@types/mocha": "^5.2.5",
     "@types/node": "^10.12.0",
@@ -17,7 +31,5 @@
     "tslint": "^5.11.0",
     "typescript": "^3.1.3"
   },
-  "dependencies": {
-    "ts-transformer-keys": "^0.3.3"
-  }
+  "dependencies": {}
 }
