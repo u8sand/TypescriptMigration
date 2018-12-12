@@ -2,26 +2,27 @@
  * We try hard to preserve type information throughout the conversion to enable type-safe migrations~
  */
 
-type Object = {
-  [k: string]: unknown
+type Object = {[k: string]: unknown}
+type KeysOf<T extends Object> = keyof T
+type LabelsOf<T extends Object> = {
+  [key in KeysOf<T>]: key
 }
-
-type KeysOf<T extends Object> = keyof T & string
-type EitherKey<Left, Right> = (keyof Left | keyof Right) & string
-type LabelOf<Left, Right> = {
-  [key in keyof Left]: keyof LabelOf<Right, Left>
+type Migration<Left, Right> = {
+  left: Partial<{
+    [key in KeysOf<Left>]: keyof LabelsOf<Right> | ((obj: Right) => Left[key])
+  }>
+  right: Partial<{
+    [key in KeysOf<Right>]: keyof LabelsOf<Left> | ((obj: Left) => Right[key])
+  }>
 }
-
-type Migration<Left, Right> = Partial<{
-  [key in KeysOf<LabelOf<Left, Right>>]: keyof LabelOf<Right, Right> | ((obj: Right) => Left[key])
-}> & Partial<{
-  [key in KeysOf<LabelOf<Right, Left>>]: keyof LabelOf<Left, Left> | ((obj: Left) => Right[key])
-}>
 
 type CompleteMigration<Left, Right> = {
-  [key in KeysOf<LabelOf<Left, Right>>]: ((obj: Right) => Left[key])
-} & {
-  [key in KeysOf<LabelOf<Right, Left>>]: ((obj: Left) => Right[key])
+  left: {
+    [key in KeysOf<Left>]: ((obj: Right) => Left[key])
+  }
+  right: {
+    [key in KeysOf<Right>]: ((obj: Left) => Right[key])
+  }
 }
 
 type CompiledMigration<Left, Right> = {
@@ -30,68 +31,68 @@ type CompiledMigration<Left, Right> = {
 }
 
 function Labeler<
-  Left extends Object,
-  Right extends Object
+  Obj extends Object,
 >(
-  obj: Left,
-  name: string
-): LabelOf<Left, Right> {
-  return Object.keys(obj).reduce<
-    LabelOf<Left, Right>
-  >(
-    (labeler, key) => {
-      labeler[key] = name + '.' + key
-      return labeler
-    },
-    {} as LabelOf<Left, Right>
-  )
+  obj: Obj
+): LabelsOf<Obj> {
+  return Object.keys(obj).reduce((labeler, key: KeysOf<Obj>) => {
+    labeler[key] = key
+    return labeler
+  }, {} as LabelsOf<Obj>)
 }
 
 export function CompileMigration<Left extends Object, Right extends Object>(
   Left: Left,
   Right: Right,
   m_func: (_: {
-    left: LabelOf<Left, Right>,
-    right:  LabelOf<Right, Left>,
+    left: LabelsOf<Left>,
+    right:  LabelsOf<Right>,
   }) => Migration<Left, Right>
 ): CompiledMigration<Left, Right> {
   const M_partial = m_func({
-    left: Labeler(Left, 'left'),
-    right: Labeler(Right, 'right'),
+    left: Labeler(Left),
+    right: Labeler(Right),
   })
 
-  const M_complete = Object.keys(M_partial).reduce(
-    (M_complete, left_k: EitherKey<LabelOf<Left, Right>, LabelOf<Right, Left>>) => {
-      // TODO: Fix these type-bindings to propagate migration function return values
-      if(typeof M_partial[left_k] === 'function') {
-        (M_complete[left_k] as any) = M_partial[left_k]
-      } else {
-        const right_k: KeysOf<LabelOf<Right, Left>> = M_partial[left_k] as string;
-        const left_k_resolved = left_k.slice(left_k.indexOf('.')+1);
-        const right_k_resolved = right_k.slice(right_k.indexOf('.')+1);
-        (M_complete[left_k] as any) = (right: Right) => right[right_k_resolved];
-        (M_complete[right_k] as any) = (left: Left) => left[left_k_resolved];
-      }
-      return M_complete
-    }, {} as CompleteMigration<Left, Right>
-  )
+  let M_complete: CompleteMigration<Left, Right> = {
+    left: {} as any,
+    right: {} as any,
+  }
+
+  for(const left_k of Object.keys(M_partial.left)) {
+    if(typeof M_partial.left[left_k] === 'function') {
+      M_complete.left[left_k] = M_partial.left[left_k] as (right: Right) => Left
+    } else {
+      const right_k: KeysOf<Right> = M_partial.left[left_k] as string;
+      const left_k_resolved = left_k.slice(left_k.indexOf('.')+1)
+      const right_k_resolved = (right_k as string).slice((right_k as string).indexOf('.')+1)
+      M_complete.left[left_k] = (right: Right) => right[right_k_resolved]
+      M_complete.right[right_k] = (left: Left) => left[left_k_resolved]
+    }
+  }
+
+  for(const right_k of Object.keys(M_partial.right)) {
+    if(typeof M_partial.right[right_k] === 'function') {
+      M_complete.right[right_k] = M_partial.right[right_k] as (left: Left) => Right
+    } else {
+      const left_k: KeysOf<Left> = M_partial.right[right_k] as string;
+      const right_k_resolved = right_k.slice(right_k.indexOf('.')+1)
+      const left_k_resolved = (left_k as string).slice((left_k as string).indexOf('.')+1)
+      M_complete.right[right_k] = (left: Left) => left[left_k_resolved]
+      M_complete.left[left_k] = (right: Right) => right[right_k_resolved]
+    }
+  }
 
   return {
     forward: (left: Left): Right => {
-      return Object.keys(M_complete).reduce<Right>((result, k: KeysOf<Left>) => {
-        if(k.indexOf('right.') === 0) {
-          const k_resolved = k.slice(k.indexOf('.')+1)
-          result[k_resolved] = M_complete[k](left)
-        }
+      return Object.keys(M_complete.right).reduce<Right>((result, k: KeysOf<Right>) => {
+        result[k] = M_complete.right[k](left)
         return result
       }, {} as Right)
     },
     reverse: (right: Right): Left => {
-      return Object.keys(M_complete).reduce<Left>((result, k: KeysOf<Right>) => {
-        if(k.indexOf('left.') === 0) {
-          const k_resolved = k.slice(k.indexOf('.')+1)
-          result[k_resolved] = M_complete[k](right)
-        }
+      return Object.keys(M_complete.left).reduce<Left>((result, k: KeysOf<Left>) => {
+        result[k] = M_complete.left[k](right)
         return result
       }, {} as Left)
     },

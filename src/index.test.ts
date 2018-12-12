@@ -19,11 +19,15 @@ describe('test migration', function() {
   const migration = CompileMigration(
     new Left(), new Right(),
     ({left, right}) => ({
-      [left.a]: right.g,
-      [left.b]: right.f,
-      [left.c]: right.e,
-      [left.d]: (obj: Right) => obj.e + ':' + obj.g,
-      [right.h]: (obj: Left) => obj.d.split(':')[0],
+      left: {
+        [left.a]: right.g,
+        [left.b]: right.f,
+        [left.c]: right.e,
+        [left.d]: (right: Right) => right.e + ':' + right.g,
+      },
+      right: {
+        [right.h]: (left: Left) => left.d.split(':')[0],
+      },
     })
   )
 
