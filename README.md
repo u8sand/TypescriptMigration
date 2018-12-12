@@ -1,3 +1,5 @@
+[![](https://img.shields.io/npm/v/ts-migration.svg)](https://www.npmjs.com/package/ts-migration) [![](https://img.shields.io/npm/l/ts-migration.svg)](https://www.apache.org/licenses/LICENSE-2.0)
+
 # TypescriptMigration
 
 A typesafe bidirectional migration facilitator.
