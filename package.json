@@ -7,12 +7,12 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/dcic/signature-commons-schema.git"
+    "url": "git+https://github.com/u8sand/TypescriptMigration.git"
   },
   "bugs": {
-    "url": "https://github.com/dcic/signature-commons-schema/issues"
+    "url": "https://github.com/u8sand/TypescriptMigration/issues"
   },
-  "homepage": "https://github.com/dcic/signature-commons-schema#readme",
+  "homepage": "https://github.com/u8sand/TypescriptMigration#readme",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
