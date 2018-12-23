@@ -1,6 +1,6 @@
 {
   "name": "ts-migration",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "A typesafe bidirectional migration facilitator",
   "publishConfig": {
     "access": "public"
@@ -18,7 +18,7 @@
   "scripts": {
     "build": "tsc",
     "test": "mocha -r ts-node/register src/**/*.test.ts",
-    "prepublish": "npm run test && npm run build"
+    "prepublishOnly": "npm run test && npm run build"
   },
   "author": "Daniel J. B. Clarke <u8sand@gmail.com>",
   "license": "Apache-2.0",
